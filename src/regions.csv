@@ -1,22 +1,22 @@
 region_code, region_name, lat_min, lat_max, lon_min, lon_max
-AUS, Australia, -45, -11, 110, 155
-AMZ, Amazon Basin, -20, 12, -82, -34
-SSA, Southern South America, -56, -20, -75, -40
-CAM, Central America, 10, 30, -116, -83
-WNA, Western North America, 30, 60, -130, -103
-CNA, Central North America, 30, 50, -103, -85
-ENA, Eastern North America, 25, 50, -85, -60
-ALA, Alaska, 60, 72, -170, -103
-GRL, Greenland, 50, 85, -103, -10
-MED, Mediterranean Basin, 30, 48, -10, 40
-NEU, Northern Europe, 48, 75, -10, 40
-WAF, Western Africa, -12, 18, -20, 22
-EAF, Eastern Africa, -12, 18, 22, 52
-SAF, Southern Africa, -35, -12, 10, 52
-SAH, Sahara, 18, 30, -20, 65
-SEA, Southeast Asia, -11, 12, 95, 155
-EAS, East Asia, 20, 50, 100, 145
-SAS, South Asia, 5, 30, 65, 100
-CAS, Central Asia, 30, 50, 40, 75
-TIB, Tibet, 30, 50, 75, 100
-NAS, North Asia, 50, 70, 40, 180
+AUS, Australia, -45, -11, 110, 155,
+AMZ, Amazon Basin, -20, 12, -82, -34,
+SSA, Southern South America, -56, -20, -75, -40,
+CAM, Central America, 10, 30, -116, -83,
+WNA, Western North America, 30, 60, -130, -103,
+CNA, Central North America, 30, 50, -103, -85,
+ENA, Eastern North America, 25, 50, -85, -60,
+ALA, Alaska, 60, 72, -170, -103,
+GRL, Greenland, 50, 85, -103, -10,
+MED, Mediterranean Basin, 30, 48, -10, 40,
+NEU, Northern Europe, 48, 75, -10, 40,
+WAF, Western Africa, -12, 18, -20, 22,
+EAF, Eastern Africa, -12, 18, 22, 52,
+SAF, Southern Africa, -35, -12, 10, 52,
+SAH, Sahara, 18, 30, -20, 65,
+SEA, Southeast Asia, -11, 12, 95, 155,
+EAS, East Asia, 20, 50, 100, 145,
+SAS, South Asia, 5, 30, 65, 100,
+CAS, Central Asia, 30, 50, 40, 75,
+TIB, Tibet, 30, 50, 75, 100,
+NAS, North Asia, 50, 70, 40, 180,
