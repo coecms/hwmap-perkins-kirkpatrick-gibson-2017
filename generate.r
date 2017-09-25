@@ -13,47 +13,17 @@ day_str = function(x)
 {
   format(round(as.numeric(x), 1), nsmall = 1)
 }
-
-# colour for rect plot
-# hw_pal = colorNumeric(
-#   substr(viridis(n = 5, alpha = 1, begin = 1, end = 0.5, option = 'inferno'), 1, 7),
-#   domain = c(0, 15))
-
-# leaflet #1: rectangles
-# leaflet(dummy, options = leafletOptions(minZoom = 0, maxZoom = 18)) %>%
-#   addProviderTiles(providers$OpenStreetMap) %>%
-#   addRectangles(group = '1 °C warming',
-#     lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
-#     fillColor = ~ hw_pal(hw_days_est_1), fillOpacity = 0. #     stroke = FALSE,
-#     popup = ~ paste0(
-#       '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
-#       day_str(hw_days_est_1), ' more heatwave days with 1°C of global warming.')) %>%
-#   addRectangles(group = '2 °C warming',
-#     lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
-#     fillColor = ~ hw_pal(hw_days_est_2), fillOpacity = 0. #     stroke = FALSE,
-#     popup = ~ paste0(
-#       '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
-#       day_str(hw_days_est_2), ' more heatwave days with 1°C of global warming.')) %>%
-#   addRectangles(group = '3 °C warming',
-#     lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
-#     fillColor = ~ hw_pal(hw_days_est_3), fillOpacity = 0. #     stroke = FALSE,
-#     popup = ~ paste0(
-#       '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
-#       day_str(hw_days_est_3), ' more heatwave days with 3°C of global warming.')) %>%
-#   addLayersControl(baseGroups = c('1 °C warming', '2 °C warming', '3 °C warming'),
-#      options = layersControlOptions(collapsed = FALSE))
-  # pipe to %>% saveWidget('test.html') to export!
-  # next: pretty up with popupOptions and add real data
-
+# nice yellow-to-purple colour palette
 hw_pal = colorNumeric(
   substr(viridis(n = 6, alpha = 1, begin = 1, end = 0, option = 'inferno'), 1, 7),
   domain = c(0, 150))
 
-# leaflet #2. unfortunately, we have to add each region, for each degree of warming, one at a time.
-# this is gonna be a lot of code.
+# render leaflet map
+# unfortunately, we have to add each region, for each degree of warming,
+# one at a time. this is gonna be a lot of code.
 hw_plot = leaflet(options = leafletOptions(minZoom = 2, maxZoom = 5)) %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
-  addLegend('bottomright',
+  addLegend('bottomleft',
     colors = substr(viridis(n = 6, alpha = 1, begin = 1, end = 0, option = 'inferno'), 1, 7),
     title = "Additional heatwave<br/>days per year",
     labels = c('0', '30', '60', '90', '120', '150'),
@@ -1556,5 +1526,5 @@ hw_plot = leaflet(options = leafletOptions(minZoom = 2, maxZoom = 5)) %>%
     options = layersControlOptions(collapsed = FALSE))
   
 # save it or export it
-saveWidget(hw_plot, 'final.html')
+saveWidget(hw_plot, 'index.html')
 
