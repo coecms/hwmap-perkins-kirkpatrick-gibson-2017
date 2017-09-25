@@ -3,6 +3,7 @@
 library(readr)
 library(dplyr)
 library(tidyr)
+library(viridis)
 library(leaflet)
 library(geojsonio)
 library(htmltools)
@@ -10,67 +11,1550 @@ library(htmlwidgets)
 
 day_str = function(x)
 {
-  format(round(x, 1), nsmall = 1)
+  format(round(as.numeric(x), 1), nsmall = 1)
 }
-    
-  
-dummy =
-  data_frame(
-    region_code = c(regions$region_code),
-    hw_days_est_1 = runif(length(region_code), min = 1, max = 6),
-    hw_days_lo_1 = hw_days_est_1 - 0.5,
-    hw_days_hi_1 = hw_days_est_1 + 0.5,
-    hw_length_est_1 = round(runif(length(region_code), min = 0, max = 4)),
-    hw_length_lo_1 = pmax(hw_length_est_1 - 1, 0),
-    hw_length_hi_1 = pmax(hw_length_est_1 + 1, 0),
-    hw_days_est_2 = runif(length(region_code), min = 4, max = 10),
-    hw_days_lo_2 = hw_days_est_2 - 0.7,
-    hw_days_hi_2 = hw_days_est_2 + 0.7,
-    hw_length_est_2 = round(runif(length(region_code), min = 2, max = 6)),
-    hw_length_lo_2 = pmax(hw_length_est_2 - 1.2, 0),
-    hw_length_hi_2 = pmax(hw_length_est_2 + 1.2, 0),
-    hw_days_est_3 = runif(length(region_code), min = 7, max = 15),
-    hw_days_lo_3 = hw_days_est_3 - 1.3,
-    hw_days_hi_3 = hw_days_est_3 + 1.3,
-    hw_length_est_3 = round(runif(length(region_code), min = 6, max = 11)),
-    hw_length_lo_3 = pmax(hw_length_est_3 - 1.8, 0),
-    hw_length_hi_3 = pmax(hw_length_est_3 + 1.8, 0)) %>%
-  inner_join(regions)
-  #mutate(warming = as.numeric(warming))
 
-# experiment #1: plot it with leaflet
-hw_pal = colorNumeric(
-  substr(viridis(n = 5, alpha = 1, begin = 1, end = 0.5, option = 'inferno'), 1, 7),
-  domain = c(0, 15))
+# colour for rect plot
+# hw_pal = colorNumeric(
+#   substr(viridis(n = 5, alpha = 1, begin = 1, end = 0.5, option = 'inferno'), 1, 7),
+#   domain = c(0, 15))
 
 # leaflet #1: rectangles
-leaflet(dummy, options = leafletOptions(minZoom = 0, maxZoom = 18)) %>%
-  addProviderTiles(providers$OpenStreetMap) %>%
-  addRectangles(group = '1 °C warming',
-    lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
-    fillColor = ~ hw_pal(hw_days_est_1), fillOpacity = 0.5,
-    stroke = TRUE, weight = 1, color = 'black',
-    popup = ~ paste0(
-      '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
-      day_str(hw_days_est_1), ' more heatwave days with 1°C of global warming.')) %>%
-  addRectangles(group = '2 °C warming',
-    lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
-    fillColor = ~ hw_pal(hw_days_est_2), fillOpacity = 0.5,
-    stroke = TRUE, weight = 1, color = 'black',
-    popup = ~ paste0(
-      '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
-      day_str(hw_days_est_2), ' more heatwave days with 1°C of global warming.')) %>%
-  addRectangles(group = '3 °C warming',
-    lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
-    fillColor = ~ hw_pal(hw_days_est_3), fillOpacity = 0.5,
-    stroke = TRUE, weight = 1, color = 'black',
-    popup = ~ paste0(
-      '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
-      day_str(hw_days_est_3), ' more heatwave days with 3°C of global warming.')) %>%
-  addLayersControl(baseGroups = c('1 °C warming', '2 °C warming', '3 °C warming'),
-     options = layersControlOptions(collapsed = FALSE))
+# leaflet(dummy, options = leafletOptions(minZoom = 0, maxZoom = 18)) %>%
+#   addProviderTiles(providers$OpenStreetMap) %>%
+#   addRectangles(group = '1 °C warming',
+#     lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
+#     fillColor = ~ hw_pal(hw_days_est_1), fillOpacity = 0. #     stroke = FALSE,
+#     popup = ~ paste0(
+#       '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
+#       day_str(hw_days_est_1), ' more heatwave days with 1°C of global warming.')) %>%
+#   addRectangles(group = '2 °C warming',
+#     lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
+#     fillColor = ~ hw_pal(hw_days_est_2), fillOpacity = 0. #     stroke = FALSE,
+#     popup = ~ paste0(
+#       '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
+#       day_str(hw_days_est_2), ' more heatwave days with 1°C of global warming.')) %>%
+#   addRectangles(group = '3 °C warming',
+#     lng1 = ~ lon_min, lng2 = ~ lon_max, lat1 = ~ lat_min, lat2 = ~ lat_max,
+#     fillColor = ~ hw_pal(hw_days_est_3), fillOpacity = 0. #     stroke = FALSE,
+#     popup = ~ paste0(
+#       '<strong>', region_name, ' (', region_code, ')</strong><br/><br/>',
+#       day_str(hw_days_est_3), ' more heatwave days with 3°C of global warming.')) %>%
+#   addLayersControl(baseGroups = c('1 °C warming', '2 °C warming', '3 °C warming'),
+#      options = layersControlOptions(collapsed = FALSE))
   # pipe to %>% saveWidget('test.html') to export!
   # next: pretty up with popupOptions and add real data
 
+hw_pal = colorNumeric(
+  substr(viridis(n = 6, alpha = 1, begin = 1, end = 0, option = 'inferno'), 1, 7),
+  domain = c(0, 150))
 
+# leaflet #2. unfortunately, we have to add each region, for each degree of warming, one at a time.
+# this is gonna be a lot of code.
+hw_plot = leaflet(options = leafletOptions(minZoom = 2, maxZoom = 5)) %>%
+  addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+  addLegend('bottomright',
+    colors = substr(viridis(n = 6, alpha = 1, begin = 1, end = 0, option = 'inferno'), 1, 7),
+    title = "Additional heatwave<br/>days per year",
+    labels = c('0', '30', '60', '90', '120', '150'),
+    opacity = 0.75) %>%
+  ### AUS
+  # AUS, 1 degree
+  addPolygons(data = geojson_read('region_shapes/AUS.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # AUS, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/AUS.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # AUS, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/AUS.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # AUS, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/AUS.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # AUS, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/AUS.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### AMZ
+  # AMZ, 1 degree
+  addPolygons(data = geojson_read('region_shapes/AMZ.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # AMZ, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/AMZ.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # AMZ, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/AMZ.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # AMZ, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/AMZ.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # AMZ, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/AMZ.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### SSA
+  # SSA, 1 degree
+  addPolygons(data = geojson_read('region_shapes/SSA.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # SSA, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/SSA.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # SSA, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/SSA.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # SSA, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/SSA.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # SSA, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/SSA.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### CAM
+  # CAM, 1 degree
+  addPolygons(data = geojson_read('region_shapes/CAM.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # CAM, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/CAM.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # CAM, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/CAM.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # CAM, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/CAM.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # CAM, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/CAM.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### WNA
+  # WNA, 1 degree
+  addPolygons(data = geojson_read('region_shapes/WNA.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # WNA, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/WNA.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # WNA, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/WNA.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # WNA, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/WNA.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # WNA, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/WNA.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### CNA
+  # CNA, 1 degree
+  addPolygons(data = geojson_read('region_shapes/CNA.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # CNA, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/CNA.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # CNA, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/CNA.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # CNA, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/CNA.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # CNA, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/CNA.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### ENA
+  # ENA, 1 degree
+  addPolygons(data = geojson_read('region_shapes/ENA.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # ENA, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/ENA.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # ENA, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/ENA.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # ENA, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/ENA.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # ENA, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/ENA.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### ALA
+  # ALA, 1 degree
+  addPolygons(data = geojson_read('region_shapes/ALA.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # ALA, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/ALA.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # ALA, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/ALA.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # ALA, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/ALA.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # ALA, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/ALA.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### GRL
+  # GRL, 1 degree
+  addPolygons(data = geojson_read('region_shapes/GRL.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # GRL, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/GRL.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # GRL, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/GRL.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # GRL, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/GRL.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # GRL, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/GRL.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### MED
+  # MED, 1 degree
+  addPolygons(data = geojson_read('region_shapes/MED.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # MED, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/MED.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # MED, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/MED.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # MED, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/MED.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # MED, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/MED.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### NEU
+  # NEU, 1 degree
+  addPolygons(data = geojson_read('region_shapes/NEU.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # NEU, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/NEU.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # NEU, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/NEU.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # NEU, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/NEU.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # NEU, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/NEU.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### WAF
+  # WAF, 1 degree
+  addPolygons(data = geojson_read('region_shapes/WAF.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # WAF, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/WAF.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # WAF, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/WAF.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # WAF, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/WAF.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # WAF, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/WAF.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### EAF
+  # EAF, 1 degree
+  addPolygons(data = geojson_read('region_shapes/EAF.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # EAF, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/EAF.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # EAF, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/EAF.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # EAF, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/EAF.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # EAF, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/EAF.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### SAF
+  # SAF, 1 degree
+  addPolygons(data = geojson_read('region_shapes/SAF.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # SAF, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/SAF.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # SAF, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/SAF.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # SAF, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/SAF.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # SAF, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/SAF.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### SAH
+  # SAH, 1 degree
+  addPolygons(data = geojson_read('region_shapes/SAH.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # SAH, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/SAH.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # SAH, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/SAH.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # SAH, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/SAH.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # SAH, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/SAH.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### SEA
+  # SEA, 1 degree
+  addPolygons(data = geojson_read('region_shapes/SEA.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # SEA, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/SEA.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # SEA, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/SEA.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # SEA, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/SEA.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # SEA, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/SEA.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### EAS
+  # EAS, 1 degree
+  addPolygons(data = geojson_read('region_shapes/EAS.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # EAS, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/EAS.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # EAS, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/EAS.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # EAS, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/EAS.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # EAS, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/EAS.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### SAS
+  # SAS, 1 degree
+  addPolygons(data = geojson_read('region_shapes/SAS.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # SAS, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/SAS.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # SAS, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/SAS.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # SAS, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/SAS.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # SAS, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/SAS.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### CAS
+  # CAS, 1 degree
+  addPolygons(data = geojson_read('region_shapes/CAS.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # CAS, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/CAS.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # CAS, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/CAS.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # CAS, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/CAS.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # CAS, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/CAS.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### TIB
+  # TIB, 1 degree
+  addPolygons(data = geojson_read('region_shapes/TIB.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # TIB, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/TIB.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # TIB, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/TIB.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # TIB, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/TIB.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # TIB, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/TIB.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  ### NAS
+  # NAS, 1 degree
+  addPolygons(data = geojson_read('region_shapes/NAS.geojson', what = 'sp'), group = '1 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 1 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate), '</strong> more heatwave days (',
+      day_str(HWF_cilow), ' to ', day_str(HWF_cihigh), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate), '</strong> days longer (',
+      day_str(HWD_cilow), ' to ', day_str(HWD_cihigh), ').<br/>',
+      '<strong>', day_str(HWM_estimate), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow), ' to ', day_str(HWM_cihigh), ').<br/>',
+      '<strong>', day_str(HWA_estimate), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow), ' to ', day_str(HWA_cihigh), ').<br/>')) %>%
+  # NAS, 2 degrees
+  addPolygons(data = geojson_read('region_shapes/NAS.geojson', what = 'sp'), group = '2 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg2), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 2 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg2), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg2), ' to ', day_str(HWF_cihigh_deg2), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg2), '</strong> days longer (',
+      day_str(HWD_cilow_deg2), ' to ', day_str(HWD_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg2), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg2), ' to ', day_str(HWM_cihigh_deg2), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg2), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg2), ' to ', day_str(HWA_cihigh_deg2), ').<br/>')) %>%
+  # NAS, 3 degrees
+  addPolygons(data = geojson_read('region_shapes/NAS.geojson', what = 'sp'), group = '3 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg3), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 3 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg3), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg3), ' to ', day_str(HWF_cihigh_deg3), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg3), '</strong> days longer (',
+      day_str(HWD_cilow_deg3), ' to ', day_str(HWD_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg3), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg3), ' to ', day_str(HWM_cihigh_deg3), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg3), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg3), ' to ', day_str(HWA_cihigh_deg3), ').<br/>')) %>%
+  # NAS, 4 degrees
+  addPolygons(data = geojson_read('region_shapes/NAS.geojson', what = 'sp'), group = '4 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg4), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 4 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg4), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg4), ' to ', day_str(HWF_cihigh_deg4), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg4), '</strong> days longer (',
+      day_str(HWD_cilow_deg4), ' to ', day_str(HWD_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg4), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg4), ' to ', day_str(HWM_cihigh_deg4), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg4), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg4), ' to ', day_str(HWA_cihigh_deg4), ').<br/>')) %>%
+  # NAS, 5 degrees
+  addPolygons(data = geojson_read('region_shapes/NAS.geojson', what = 'sp'), group = '5 °C warming',
+    fillColor = ~ hw_pal(HWF_estimate_deg5), fillOpacity = 0.75, stroke = FALSE,
+    popup = ~ paste0(
+      '<strong>Annual heatwave statistics for ', region_name,
+      ' (', region_code, ') under 5 °C of warming</strong><br/><br/>',
+      '<strong>', day_str(HWF_estimate_deg5), '</strong> more heatwave days (',
+      day_str(HWF_cilow_deg5), ' to ', day_str(HWF_cihigh_deg5), ').<br/>',
+      'Longest heatwave is <strong>', day_str(HWD_estimate_deg5), '</strong> days longer (',
+      day_str(HWD_cilow_deg5), ' to ', day_str(HWD_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWM_estimate_deg5), ' °C</strong> increase in mean temperature across all heatwaves (',
+      day_str(HWM_cilow_deg5), ' to ', day_str(HWM_cihigh_deg5), ').<br/>',
+      '<strong>', day_str(HWA_estimate_deg5), ' °C</strong> increase peak heatwave temperature (',
+      day_str(HWA_cilow_deg5), ' to ', day_str(HWA_cihigh_deg5), ').<br/>')) %>%
+  # switch warming level in corner
+  addLayersControl(
+    baseGroups =
+      c('1 °C warming', '2 °C warming', '3 °C warming', '4 °C warming', '5 °C warming'),
+    options = layersControlOptions(collapsed = FALSE))
+  
+# save it or export it
+saveWidget(hw_plot, 'final.html')
 

@@ -14,10 +14,12 @@ hw_stats =
   gather(key = aspect, value = value, estimate:iqr) %>%
   unite(var, c('hw_stat', 'aspect')) %>%
   spread(var, value) %>%
-  mutate_at(-1, funs(deg2 = . * 2, deg3 = . * 3))
+  mutate_at(-1, funs(
+    deg2 = . * 2,
+    deg3 = . * 3,
+    deg4 = . * 4,
+    deg5 = . * 5))
     
-  
-  
 regions =
   read_csv('src/regions.csv',
     col_types = cols(
