@@ -21,8 +21,9 @@ hw_pal = colorNumeric(
 # render leaflet map
 # unfortunately, we have to add each region, for each degree of warming,
 # one at a time. this is gonna be a lot of code.
-hw_plot = leaflet(options = leafletOptions(minZoom = 2, maxZoom = 5)) %>%
+hw_plot = leaflet(options = leafletOptions(minZoom = 1, maxZoom = 5)) %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+  setView(lat = 0, lng = 0, zoom = 2) %>%
   addLegend('bottomleft',
     colors = substr(viridis(n = 6, alpha = 1, begin = 1, end = 0, option = 'inferno'), 1, 7),
     title = "Additional heatwave<br/>days per year",
@@ -1523,7 +1524,7 @@ hw_plot = leaflet(options = leafletOptions(minZoom = 2, maxZoom = 5)) %>%
   addLayersControl(
     baseGroups =
       c('1 °C warming', '2 °C warming', '3 °C warming', '4 °C warming', '5 °C warming'),
-    options = layersControlOptions(collapsed = FALSE))
+    options = layersControlOptions(collapsed = TRUE))
   
 # save it or export it
 saveWidget(hw_plot, 'index.html')
