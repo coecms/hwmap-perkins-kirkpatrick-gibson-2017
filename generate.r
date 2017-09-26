@@ -30,7 +30,7 @@ hw_plot = leaflet(options = leafletOptions(minZoom = 1, maxZoom = 5)) %>%
     title = "Additional heatwave<br/>days per year",
     labels = c('0', '30', '60', '90', '120', '150'),
     opacity = 0.75) %>%
-  addFullscreenControl(position = 'topleft', pseudoFullscreen = FALSE) %>%
+  addFullscreenControl(position = 'topleft', pseudoFullscreen = TRUE) %>%
   ### AUS
   # AUS, 1 degree
   addPolygons(data = geojson_read('region_shapes/AUS.geojson', what = 'sp'), group = '1 °C warming',
